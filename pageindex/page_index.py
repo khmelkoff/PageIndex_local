@@ -8,6 +8,10 @@ from .utils import *
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+if not os.getenv("ACCURACY_THRESHOLD"):
+    ACCURACY_THRESHOLD = 0.59
+else:
+    ACCURACY_THRESHOLD = os.getenv("ACCURACY_THRESHOLD")
 
 ################### check title in page #########################################################
 async def check_title_appearance(item, page_list, start_index=1, model=None):    
@@ -952,9 +956,6 @@ async def verify_toc(page_list, list_result, start_index=1, N=None, model=None):
     return accuracy, incorrect_results
 
 
-
-
-
 ################### main process #########################################################
 async def meta_processor(page_list, mode=None, toc_content=None, toc_page_list=None, start_index=1, opt=None, logger=None):
     print(mode)
@@ -985,7 +986,7 @@ async def meta_processor(page_list, mode=None, toc_content=None, toc_page_list=N
     })
     if accuracy == 1.0 and len(incorrect_results) == 0:
         return toc_with_page_number
-    if accuracy > 0.6 and len(incorrect_results) > 0:
+    if accuracy >= ACCURACY_THRESHOLD and len(incorrect_results) > 0:
         toc_with_page_number, incorrect_results = await fix_incorrect_toc_with_retries(toc_with_page_number, page_list, incorrect_results,start_index=start_index, max_attempts=3, model=opt.model, logger=logger)
         return toc_with_page_number
     else:
