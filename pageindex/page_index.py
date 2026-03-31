@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 if not os.getenv("ACCURACY_THRESHOLD"):
     ACCURACY_THRESHOLD = 0.59
 else:
-    ACCURACY_THRESHOLD = os.getenv("ACCURACY_THRESHOLD")
+    ACCURACY_THRESHOLD = float(os.getenv("ACCURACY_THRESHOLD"))
 
 ################### check title in page #########################################################
 async def check_title_appearance(item, page_list, start_index=1, model=None):    
@@ -121,7 +121,8 @@ def toc_detector_single_page(content, model=None):
     Please note: abstract,summary, notation list, figure list, table list, etc. are not table of contents."""
 
     response = llm_completion(model=model, prompt=prompt)
-    # print('response', response)
+    print('response', response)
+    print()
     json_content = extract_json(response)    
     return json_content['toc_detected']
 

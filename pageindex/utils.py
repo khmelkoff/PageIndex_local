@@ -25,7 +25,7 @@ if not os.getenv("OLLAMA_HOST"):
     os.environ["OLLAMA_HOST"] = 'http://192.168.1.43:11434/v1'
 
 if not os.getenv("OLLAMA_TIMEOUT"):
-    os.environ["OLLAMA_TIMEOUT"] = 1200
+    os.environ["OLLAMA_TIMEOUT"] = '1200'
 
 litellm.drop_params = True
 
@@ -47,7 +47,7 @@ def llm_completion(model, prompt, chat_history=None, return_finish_reason=False)
                 messages=messages,
                 temperature=0,
                 base_url=os.getenv("OLLAMA_HOST"),
-                timeout=os.getenv("OLLAMA_TIMEOUT"),
+                timeout=int(os.getenv("OLLAMA_TIMEOUT")),
             )
             content = response.choices[0].message.content
             if return_finish_reason:
@@ -78,7 +78,7 @@ async def llm_acompletion(model, prompt):
                 messages=messages,
                 temperature=0,
                 base_url=os.getenv("OLLAMA_HOST"),
-                timeout=os.getenv("OLLAMA_TIMEOUT"),
+                timeout=int(os.getenv("OLLAMA_TIMEOUT")),
             )
             return response.choices[0].message.content
         except Exception as e:
