@@ -22,7 +22,7 @@ if not os.getenv("OPENAI_API_KEY") and os.getenv("CHATGPT_API_KEY"):
     os.environ["OPENAI_API_KEY"] = os.getenv("CHATGPT_API_KEY")
 
 if not os.getenv("OLLAMA_HOST"):
-    os.environ["OLLAMA_HOST"] = 'http://192.168.1.43:11434/v1'
+    os.environ["OLLAMA_HOST"] = ''
 
 if not os.getenv("OLLAMA_TIMEOUT"):
     os.environ["OLLAMA_TIMEOUT"] = '1200'

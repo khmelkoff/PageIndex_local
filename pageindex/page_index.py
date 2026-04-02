@@ -13,6 +13,12 @@ if not os.getenv("ACCURACY_THRESHOLD"):
 else:
     ACCURACY_THRESHOLD = float(os.getenv("ACCURACY_THRESHOLD"))
 
+if not os.getenv("MAX_TOKENS"):
+    MAX_TOKENS = 5000
+else:
+    MAX_TOKENS = int(os.getenv("MAX_TOKENS"))
+
+
 ################### check title in page #########################################################
 async def check_title_appearance(item, page_list, start_index=1, model=None):    
     title=item['title']
@@ -122,7 +128,6 @@ def toc_detector_single_page(content, model=None):
 
     response = llm_completion(model=model, prompt=prompt)
     print('response', response)
-    print()
     json_content = extract_json(response)    
     return json_content['toc_detected']
 
@@ -428,7 +433,7 @@ def add_page_offset_to_toc_json(data, offset):
 
 
 
-def page_list_to_group_text(page_contents, token_lengths, max_tokens=20000, overlap_page=1):    
+def page_list_to_group_text(page_contents, token_lengths, max_tokens=MAX_TOKENS, overlap_page=1):    # TODO
     num_tokens = sum(token_lengths)
     
     if num_tokens <= max_tokens:
@@ -511,6 +516,9 @@ def remove_first_physical_index_section(text):
 ### add verify completeness
 def generate_toc_continue(toc_content, part, model=None):
     print('start generate_toc_continue')
+
+    print(f'\nPART:\n{part}\n')
+
     prompt = """
     You are an expert in extracting hierarchical tree structure.
     You are given a tree structure of the previous part and the text of the current part.
@@ -538,14 +546,22 @@ def generate_toc_continue(toc_content, part, model=None):
 
     prompt = prompt + '\nGiven text\n:' + part + '\nPrevious tree structure\n:' + json.dumps(toc_content, indent=2)
     response, finish_reason = llm_completion(model=model, prompt=prompt, return_finish_reason=True)
+
+    print(response)  # TODO
+    print()
+
     if finish_reason == 'finished':
         return extract_json(response)
     else:
         raise Exception(f'finish reason: {finish_reason}')
-    
-### add verify completeness
+
+
+### add verify completeness  # TODO
 def generate_toc_init(part, model=None):
     print('start generate_toc_init')
+
+    print(f'\nPART:\n{part}\n')
+
     prompt = """
     You are an expert in extracting hierarchical tree structure, your task is to generate the tree structure of the document.
 
@@ -573,6 +589,9 @@ def generate_toc_init(part, model=None):
     prompt = prompt + '\nGiven text\n:' + part
     response, finish_reason = llm_completion(model=model, prompt=prompt, return_finish_reason=True)
 
+    print(response)  # TODO
+    print()
+
     if finish_reason == 'finished':
          return extract_json(response)
     else:
@@ -588,7 +607,7 @@ def process_no_toc(page_list, start_index=1, model=None, logger=None):
     group_texts = page_list_to_group_text(page_contents, token_lengths)
     logger.info(f'len(group_texts): {len(group_texts)}')
 
-    toc_with_page_number= generate_toc_init(group_texts[0], model)
+    toc_with_page_number = generate_toc_init(group_texts[0], model)
     for group_text in group_texts[1:]:
         toc_with_page_number_additional = generate_toc_continue(toc_with_page_number, group_text, model)    
         toc_with_page_number.extend(toc_with_page_number_additional)
@@ -957,6 +976,9 @@ async def verify_toc(page_list, list_result, start_index=1, N=None, model=None):
     return accuracy, incorrect_results
 
 
+
+
+
 ################### main process #########################################################
 async def meta_processor(page_list, mode=None, toc_content=None, toc_page_list=None, start_index=1, opt=None, logger=None):
     print(mode)
@@ -1048,6 +1070,8 @@ async def tree_parser(page_list, opt, doc=None, logger=None):
             start_index=1, 
             opt=opt,
             logger=logger)
+
+    # print(toc_with_page_number)
 
     toc_with_page_number = add_preface_if_needed(toc_with_page_number)
     toc_with_page_number = await check_title_appearance_in_start_concurrent(toc_with_page_number, page_list, model=opt.model, logger=logger)
